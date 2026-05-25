@@ -39,10 +39,11 @@ type BatchProxyToggleRequest struct {
 }
 
 type DNSRecord struct {
-	Domain string `json:"domain"`
-	Host   string `json:"host"`
-	Type   string `json:"type"`
-	Value  string `json:"value"`
+	Domain   string `json:"domain"`
+	Host     string `json:"host"`
+	Type     string `json:"type"`
+	Value    string `json:"value"`
+	Priority *int   `json:"priority,omitempty"`
 }
 
 type DNSResult struct {
@@ -124,12 +125,23 @@ func parseRecords(lines []string) []DNSRecord {
 		if len(parts) < 4 {
 			continue
 		}
-		records = append(records, DNSRecord{
+		rec := DNSRecord{
 			Domain: strings.TrimSpace(parts[0]),
 			Host:   strings.TrimSpace(parts[1]),
 			Type:   strings.TrimSpace(parts[2]),
 			Value:  strings.TrimSpace(parts[3]),
-		})
+		}
+		if len(parts) >= 5 {
+			var p int
+			_, err := fmt.Sscanf(strings.TrimSpace(parts[4]), "%d", &p)
+			if err == nil {
+				rec.Priority = &p
+			}
+		} else if strings.ToUpper(rec.Type) == "MX" {
+			default_priority := 10
+			rec.Priority = &default_priority
+		}
+		records = append(records, rec)
 	}
 	return records
 }
@@ -154,6 +166,12 @@ func addDNSRecord(acc *models.Account, record DNSRecord, ttl int, proxied bool, 
 		"content": record.Value,
 		"ttl":     ttl,
 		"proxied": proxied,
+	}
+	if strings.ToUpper(record.Type) == "MX" {
+		payload["proxied"] = false
+	}
+	if record.Priority != nil {
+		payload["priority"] = *record.Priority
 	}
 	body, _ := json.Marshal(payload)
 

@@ -51,6 +51,7 @@ func main() {
 		api.POST("/optimization/batch-settings", handler.BatchOptimization)
 		api.POST("/bulk-settings/batch-apply", handler.BatchBulkSettings)
 		api.POST("/email/batch-routing", handler.BatchEmailRouting)
+		api.POST("/email/batch-delete", handler.BatchDeleteEmailRouting)
 	}
 
 	dist, err := fs.Sub(content, "dist")

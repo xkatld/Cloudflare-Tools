@@ -121,11 +121,13 @@ export class DNSRecordsModule {
 
     const parsedRecords = records.map(r => {
       const parts = r.split('|');
+      const val = parts[3] || '';
+      const show_val = parts[4] ? val + ' [优先级: ' + parts[4] + ']' : val;
       return {
         domain: parts[0] || '',
         host: parts[1] || '@',
         type: parts[2] || 'A',
-        value: parts[3] || ''
+        value: show_val
       };
     });
 
